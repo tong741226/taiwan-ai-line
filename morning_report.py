@@ -1,4 +1,3 @@
-```python
 import os
 import requests
 import yfinance as yf
@@ -88,4 +87,3 @@ res = requests.post(url, headers=headers, json=payload)
 
 print(res.status_code)
 print(res.text)
-```
