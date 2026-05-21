@@ -7,7 +7,7 @@ import feedparser
 # LINE TOKEN
 # =========================
 
-LINE_TOKEN = os.environ.get("LINE_TOKEN")
+LINE_TOKEN = os.getenv("LINE_TOKEN")
 
 # =========================
 # 抓資料
