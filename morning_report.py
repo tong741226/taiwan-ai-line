@@ -214,7 +214,7 @@ market_items = [
     get_price("^SOX", "費城半導體"),
     get_price("^TWII", "台灣加權指數"),
     get_otc_index(),
-    get_night_market,
+    night_market,
 ]
 
 
