@@ -2,7 +2,7 @@ import os
 import requests
 import yfinance as yf
 import feedparser
-from google import genai
+import google.generativeai as genai
 
 LINE_TOKEN = os.getenv("LINE_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -74,12 +74,13 @@ def ai_analysis(raw_text):
 不要給明確買賣建議，不要保證漲跌。
 """
 
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
-        )
+genai.configure(api_key=GEMINI_API_KEY)
 
-        return response.text
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+response = model.generate_content(prompt)
+
+return response.text
 
     except Exception as e:
         return f"AI分析失敗：{e}"
