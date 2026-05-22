@@ -27,6 +27,37 @@ def get_price(symbol, name):
     except Exception:
         return f"{name}: 抓取失敗"
 
+def get_taifex_night_market():
+
+    try:
+
+        url = "https://www.taifex.com.tw/cht/3/futDailyMarketReport"
+
+        tables = pd.read_html(url)
+
+        for table in tables:
+
+            text = table.astype(str).to_string()
+
+            if "臺股期貨" in text:
+
+                row = table[
+                    table.iloc[:,0]
+                    .astype(str)
+                    .str.contains("臺股期貨", na=False)
+                ]
+
+                if not row.empty:
+
+                    value = row.iloc[0].to_string()
+
+                    return f"台指夜盤（TAIFEX）\n{value}"
+
+        return "台指夜盤：TAIFEX無資料"
+
+    except Exception as e:
+
+        return f"台指夜盤抓取失敗：{e}"
 
 def get_percent(text):
     try:
@@ -120,10 +151,8 @@ for i, entry in enumerate(feed.entries[:5], start=1):
     news_text += f"{i}. {entry.title}\n"
 
 
-night_market = get_price("WTX&.TW", "台指夜盤")
+night_market = get_taifex_night_market()
 
-if "抓取失敗" in night_market or "無資料" in night_market:
-    night_market = "台指夜盤：Yahoo資料不穩定"
 market_items = [
     get_price("^DJI", "道瓊"),
     get_price("^IXIC", "NASDAQ"),
