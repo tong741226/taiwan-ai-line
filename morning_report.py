@@ -12,7 +12,6 @@ print("LINE_TOKEN=", LINE_TOKEN)
 
 
 def get_price(symbol, name):
-    def get_otc_index():
 
     try:
 
