@@ -2,3 +2,4 @@ yfinance
 requests
 feedparser
 pandas
+lxml
