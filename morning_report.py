@@ -58,7 +58,7 @@ message = f"""
 {get_price("^SOX", "費城半導體")}
 
 🇹🇼 台灣市場
-{get_price("^TWII", "加權指數")}
+{get_price("^TWII", "台灣加權指數")}
 {get_price("^TWOII", "櫃買指數")}
 {get_price("TXF=F", "台指夜盤")}
 """
