@@ -57,7 +57,9 @@ def ai_analysis(raw_text):
         return "AI分析：未設定 GEMINI_API_KEY"
 
     try:
-        client = genai.Client(api_key=GEMINI_API_KEY)
+        genai.configure(api_key=GEMINI_API_KEY)
+
+        model = genai.GenerativeModel("gemini-1.5-flash")
 
         prompt = f"""
 你是一位台股盤前分析助理。
