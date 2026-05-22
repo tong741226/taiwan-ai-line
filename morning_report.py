@@ -74,13 +74,14 @@ def ai_analysis(raw_text):
 不要給明確買賣建議，不要保證漲跌。
 """
 
-genai.configure(api_key=GEMINI_API_KEY)
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
 
-model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-1.5-flash")
 
-response = model.generate_content(prompt)
+        response = model.generate_content(prompt)
 
-return response.text
+        return response.text
 
     except Exception as e:
         return f"AI分析失敗：{e}"
