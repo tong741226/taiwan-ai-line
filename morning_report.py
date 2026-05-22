@@ -7,6 +7,8 @@ import google.generativeai as genai
 LINE_TOKEN = os.getenv("LINE_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
+print("LINE_TOKEN=", LINE_TOKEN)
+print("GEMINI_API_KEY=", GEMINI_API_KEY)
 
 def get_price(symbol, name):
     try:
@@ -78,7 +80,7 @@ def ai_analysis(raw_text):
 
         genai.configure(api_key=GEMINI_API_KEY)
 
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-1.5-flash-latest")
 
         response = model.generate_content(prompt)
 
