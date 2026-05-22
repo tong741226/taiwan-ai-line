@@ -120,6 +120,10 @@ for i, entry in enumerate(feed.entries[:5], start=1):
     news_text += f"{i}. {entry.title}\n"
 
 
+night_market = get_price("WTX&.TW", "台指夜盤")
+
+if "抓取失敗" in night_market or "無資料" in night_market:
+    night_market = "台指夜盤：Yahoo資料不穩定"
 market_items = [
     get_price("^DJI", "道瓊"),
     get_price("^IXIC", "NASDAQ"),
@@ -127,7 +131,7 @@ market_items = [
     get_price("^SOX", "費城半導體"),
     get_price("^TWII", "台灣加權指數"),
     get_price("^TWOII", "櫃買指數"),
-    get_price("TXF=F", "台指夜盤"),
+    night_market,
 ]
 
 
