@@ -4,12 +4,43 @@ import yfinance as yf
 import feedparser
 import pandas as pd
 
+from bs4 import BeautifulSoup
+
 LINE_TOKEN = os.getenv("LINE_TOKEN")
 
 print("LINE_TOKEN=", LINE_TOKEN)
 
 
 def get_price(symbol, name):
+    def get_otc_index():
+
+    try:
+
+        url = "https://www.tpex.org.tw/www/zh-tw/indices/overview"
+
+        headers = {
+            "User-Agent": "Mozilla/5.0"
+        }
+
+        r = requests.get(url, headers=headers)
+
+        soup = BeautifulSoup(r.text, "html.parser")
+
+        text = soup.get_text()
+
+        lines = text.split("\n")
+
+        for line in lines:
+
+            if "櫃買指數" in line:
+
+                return f"櫃買指數（官方）: {line.strip()}"
+
+        return "櫃買指數：官方抓取失敗"
+
+    except Exception as e:
+
+        return f"櫃買指數抓取失敗：{e}"
     try:
         data = yf.Ticker(symbol)
         hist = data.history(period="7d")
