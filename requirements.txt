@@ -1,4 +1,4 @@
-yfinance
 requests
+yfinance
 feedparser
-pandas
+google-generativeai>=0.3.0
