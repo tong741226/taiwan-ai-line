@@ -2,44 +2,14 @@ import os
 import requests
 import yfinance as yf
 import feedparser
-import pandas as pd
 
-from bs4 import BeautifulSoup
 
 LINE_TOKEN = os.getenv("LINE_TOKEN")
 
 print("LINE_TOKEN=", LINE_TOKEN)
 
-
 def get_price(symbol, name):
 
-    try:
-
-        url = "https://www.tpex.org.tw/www/zh-tw/indices/overview"
-
-        headers = {
-            "User-Agent": "Mozilla/5.0"
-        }
-
-        r = requests.get(url, headers=headers)
-
-        soup = BeautifulSoup(r.text, "html.parser")
-
-        text = soup.get_text()
-
-        lines = text.split("\n")
-
-        for line in lines:
-
-            if "櫃買指數" in line:
-
-                return f"櫃買指數（官方）: {line.strip()}"
-
-        return "櫃買指數：官方抓取失敗"
-
-    except Exception as e:
-
-        return f"櫃買指數抓取失敗：{e}"
     try:
         data = yf.Ticker(symbol)
         hist = data.history(period="7d")
@@ -50,12 +20,13 @@ def get_price(symbol, name):
 
         close = round(hist["Close"].iloc[-1], 2)
         prev = round(hist["Close"].iloc[-2], 2)
+
         change = round(close - prev, 2)
         percent = round((change / prev) * 100, 2)
 
         return f"{name}: {close} ({change}, {percent}%)"
 
-    except Exception:
+    except Exception as e:
         return f"{name}: 抓取失敗"
 
 def get_taifex_night_market():
@@ -213,8 +184,8 @@ market_items = [
     get_price("^GSPC", "S&P500"),
     get_price("^SOX", "費城半導體"),
     get_price("^TWII", "台灣加權指數"),
-    get_otc_index(),
-    night_market,
+    get_price("^TWOII", "櫃買指數"),
+    get_price("^TWII", "台指期夜盤參考"),
 ]
 
 
