@@ -74,7 +74,6 @@ def ai_analysis(raw_text):
 不要給明確買賣建議，不要保證漲跌。
 """
 
-    try:
         genai.configure(api_key=GEMINI_API_KEY)
 
         model = genai.GenerativeModel("gemini-1.5-flash")
