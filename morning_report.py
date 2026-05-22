@@ -32,7 +32,7 @@ def get_taifex_night_market():
 
     try:
 
-        url = "https://www.taifex.com.tw/cht/3/futDailyMarketReport"
+        url = "https://www.taifex.com.tw/cht/index"
 
         tables = pd.read_html(url)
 
@@ -40,12 +40,12 @@ def get_taifex_night_market():
 
             text = table.astype(str).to_string()
 
-            if "臺股期貨" in text:
+            if "夜盤商品行情表" in text or "臺股期貨" in text:
 
                 row = table[
                     table.iloc[:,0]
                     .astype(str)
-                    .str.contains("臺股期貨", na=False)
+                    .str.contains("夜盤商品行情表" or "臺股期貨", na=False)
                 ]
 
                 if not row.empty:
