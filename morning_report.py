@@ -61,7 +61,7 @@ def ai_analysis(raw_text):
     try:
         genai.configure(api_key=GEMINI_API_KEY)
 
-        model = genai.GenerativeModel("gemini-1.5-flash-latest")
+        model = genai.GenerativeModel("gemini-2.0-flash")
 
         prompt = f"""
 你是一位台股盤前分析助理。
@@ -80,7 +80,7 @@ def ai_analysis(raw_text):
 
         genai.configure(api_key=GEMINI_API_KEY)
 
-        model = genai.GenerativeModel("gemini-1.5-flash-latest")
+        model = genai.GenerativeModel("gemini-2.0-flash")
 
         response = model.generate_content(prompt)
 
