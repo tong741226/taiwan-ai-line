@@ -90,6 +90,29 @@ def get_taifex_night_market():
 
         return f"台指夜盤抓取失敗：{e}"
 
+def get_otc_index():
+    try:
+        url = "https://www.tpex.org.tw/www/zh-tw/indices/overview"
+
+        headers = {
+            "User-Agent": "Mozilla/5.0"
+        }
+
+        r = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(r.text, "html.parser")
+        text = soup.get_text("\n")
+
+        for line in text.split("\n"):
+            if "櫃買指數" in line:
+                clean_line = line.strip()
+                if clean_line:
+                    return f"櫃買指數（官方）: {clean_line}"
+
+        return "櫃買指數：官方抓取失敗"
+
+    except Exception as e:
+        return f"櫃買指數抓取失敗：{e}"
+
 def get_percent(text):
     try:
         return float(text.split(",")[-1].replace("%)", "").strip())
@@ -190,8 +213,8 @@ market_items = [
     get_price("^GSPC", "S&P500"),
     get_price("^SOX", "費城半導體"),
     get_price("^TWII", "台灣加權指數"),
-    get_otc_index()or("^TWOII", "櫃買指數"),
-    night_market,
+    get_otc_index(),
+    get_night_market,
 ]
 
 
