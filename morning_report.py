@@ -4,9 +4,11 @@ import yfinance as yf
 import feedparser
 
 
-LINE_TOKEN = os.getenv("LINE_TOKEN")
+LINE_USER_ID = os.getenv("LINE_USER_ID")
 
-print("LINE_TOKEN=", LINE_TOKEN)
+LINE_TOKEN = os.getenv("LINE_TOKEN")
+LINE_USER_ID = os.getenv("LINE_USER_ID")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 def get_price(symbol, name):
 
@@ -217,7 +219,7 @@ message = f"""
 """
 
 
-url = "https://api.line.me/v2/bot/message/broadcast"
+url = "https://api.line.me/v2/bot/message/push"
 
 headers = {
     "Authorization": f"Bearer {LINE_TOKEN}",
@@ -225,6 +227,7 @@ headers = {
 }
 
 payload = {
+    "to": LINE_USER_ID,
     "messages": [
         {
             "type": "text",
@@ -232,8 +235,6 @@ payload = {
         }
     ]
 }
-
-res = requests.post(url, headers=headers, json=payload)
 
 print(res.status_code)
 print(res.text)
