@@ -219,7 +219,7 @@ message = f"""
 """
 
 
-url = "https://api.line.me/v2/bot/message/push"
+url = "https://api.line.me/v2/bot/message/broadcast"
 
 headers = {
     "Authorization": f"Bearer {LINE_TOKEN}",
@@ -227,7 +227,6 @@ headers = {
 }
 
 payload = {
-    "to": LINE_USER_ID,
     "messages": [
         {
             "type": "text",
