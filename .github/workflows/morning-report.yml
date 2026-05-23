@@ -20,7 +20,10 @@ jobs:
 
       - name: Install packages
         run: pip install -r requirements.txt
+
       - name: Run morning report
         env:
           LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python morning_report.py
