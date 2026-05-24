@@ -2,9 +2,11 @@ name: Morning LINE Report
 
 on:
   schedule:
-    - cron: "0 23 * * *"
+    - cron: "00 07 * * *"
+    - cron: "05 07 * * *"
+    - cron: "05 09 * * *"
+    - cron: "10 09 * * *"
   workflow_dispatch:
-
 jobs:
   run-report:
     runs-on: ubuntu-latest
