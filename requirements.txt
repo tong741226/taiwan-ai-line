@@ -1,6 +1,6 @@
-yfinance
-requests
-feedparser
-pandas
+requests 
+yfinance 
+feedparser 
+pandas 
+beautifulsoup4 
 lxml
-beautifulsoup4
