@@ -2,6 +2,8 @@ import os
 import requests
 import yfinance as yf
 import feedparser
+import pandas as pd 
+from bs4 import BeautifulSoup
 
 
 LINE_USER_ID = os.getenv("LINE_USER_ID")
