@@ -62,13 +62,19 @@ if alert_message:
         ]
     }
 
-    requests.post(
-        "https://api.line.me/v2/bot/message/push",
-        headers=headers,
-        json=payload
-    )
+res = requests.post(
+    "https://api.line.me/v2/bot/message/push",
+    headers=headers,
+    json=payload
+)
 
+print("LINE status:", res.status_code)
+print("LINE response:", res.text)
+
+if res.status_code == 200:
     print("Alert sent!")
+else:
+    print("Alert failed!")
 
 else:
     print("No alert.")
