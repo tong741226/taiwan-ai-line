@@ -16,12 +16,12 @@ def get_change(symbol):
 
         prev_close = hist["Close"].iloc[-2]
         current = hist["Close"].iloc[-1]
-
         change = ((current - prev_close) / prev_close) * 100
 
         return round(change, 2)
 
-    except:
+    except Exception as e:
+        print(f"Error fetching {symbol}: {e}")
         return 0
 
 
@@ -29,9 +29,10 @@ taiex = get_change("^TWII")
 tsmc = get_change("2330.TW")
 otc = get_change("^TWOII")
 
-
 alert_message = []
 
+# 測試用：先保留這行，確認 LINE 能收到後再刪掉
+alert_message.append("✅ 測試：盤中警報系統已成功連線 LINE")
 
 if taiex <= -1:
     alert_message.append(f"⚠️ 台股加權跌幅 {taiex}%")
@@ -42,9 +43,7 @@ if tsmc <= -1.5:
 if otc <= -1:
     alert_message.append(f"⚠️ OTC櫃買跌幅 {otc}%")
 
-
 if alert_message:
-
     message = "🚨 台股盤中風險警報\n\n" + "\n".join(alert_message)
 
     headers = {
@@ -62,19 +61,19 @@ if alert_message:
         ]
     }
 
-res = requests.post(
-    "https://api.line.me/v2/bot/message/push",
-    headers=headers,
-    json=payload
-)
+    res = requests.post(
+        "https://api.line.me/v2/bot/message/push",
+        headers=headers,
+        json=payload
+    )
 
-print("LINE status:", res.status_code)
-print("LINE response:", res.text)
+    print("LINE status:", res.status_code)
+    print("LINE response:", res.text)
 
-if res.status_code == 200:
-    print("Alert sent!")
-else:
-    print("Alert failed!")
+    if res.status_code == 200:
+        print("Alert sent!")
+    else:
+        print("Alert failed!")
 
 else:
     print("No alert.")
