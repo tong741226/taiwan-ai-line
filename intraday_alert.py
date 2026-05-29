@@ -32,7 +32,6 @@ otc = get_change("^TWOII")
 alert_message = []
 
 # 測試用：先保留這行，確認 LINE 能收到後再刪掉
-alert_message.append("✅ 測試：盤中警報系統已成功連線 LINE")
 
 if taiex <= -1:
     alert_message.append(f"⚠️ 台股加權跌幅 {taiex}%")
