@@ -2,91 +2,49 @@ import os
 import requests
 import yfinance as yf
 import feedparser
-import pandas as pd 
+import pandas as pd
 from bs4 import BeautifulSoup
 
-
-LINE_USER_ID = os.getenv("LINE_USER_ID")
-
-LINE_TOKEN = os.getenv("LINE_TOKEN")
-LINE_USER_ID = os.getenv("LINE_USER_ID")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-def get_price(symbol, name):
 
+def get_price(symbol, name):
     try:
         data = yf.Ticker(symbol)
-        hist = data.history(period="7d")
-        hist = hist.dropna()
+        hist = data.history(period="7d").dropna()
 
         if len(hist) < 2:
             return f"{name}: 無資料"
 
         close = round(hist["Close"].iloc[-1], 2)
         prev = round(hist["Close"].iloc[-2], 2)
-
         change = round(close - prev, 2)
         percent = round((change / prev) * 100, 2)
 
         return f"{name}: {close} ({change}, {percent}%)"
 
     except Exception as e:
-        return f"{name}: 抓取失敗"
+        return f"{name}: 抓取失敗：{e}"
+
 
 def get_taifex_night_market():
-
     try:
-
         url = "https://www.taifex.com.tw/cht/index"
-
         tables = pd.read_html(url)
 
         for table in tables:
-
             text = table.astype(str).to_string()
 
             if "夜盤商品行情表" in text or "臺股期貨" in text:
-
-                row = table[
-                    table.iloc[:,0]
-                    .astype(str)
-                    .str.contains("夜盤商品行情表" or "臺股期貨", na=False)
-                ]
-
-                if not row.empty:
-
-                    value = row.iloc[0].to_string()
-
-                    return f"台指夜盤（TAIFEX）\n{value}"
+                return f"台指夜盤（TAIFEX）\n{table.head(5).to_string()}"
 
         return "台指夜盤：TAIFEX無資料"
 
     except Exception as e:
-
         return f"台指夜盤抓取失敗：{e}"
 
-def get_otc_index():
-    try:
-        url = "https://www.tpex.org.tw/www/zh-tw/indices/overview"
-
-        headers = {
-            "User-Agent": "Mozilla/5.0"
-        }
-
-        r = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(r.text, "html.parser")
-        text = soup.get_text("\n")
-
-        for line in text.split("\n"):
-            if "櫃買指數" in line:
-                clean_line = line.strip()
-                if clean_line:
-                    return f"櫃買指數（官方）: {clean_line}"
-
-        return "櫃買指數：官方抓取失敗"
-
-    except Exception as e:
-        return f"櫃買指數抓取失敗：{e}"
 
 def get_percent(text):
     try:
@@ -144,28 +102,27 @@ def rule_analysis(market_items, news_titles):
     reason_text = "\n".join(reasons[:6]) if reasons else "依美股、台股漲跌與新聞標題綜合判斷。"
 
     return f"""
-1. 今日盤勢重點
+一、總指揮結論
 {view}
 
-2. 多空判斷
-{direction}
+二、多空判斷
+今日盤勢：{direction}
+盤前分數：{score}
 
-3. 台股操作提醒
-- 9:00～9:15 不急著追價
+三、台股操作提醒
+- 09:00～09:15 不急著追價
 - 先觀察加權、櫃買、台指期是否同步走強
 - 若開高走低，避免追高
 - 強勢股等回測不破再觀察
 - 優先留意 AI、半導體、電子權值與強勢中小型股
 
-4. 風險提醒
+四、風險提醒
 - 若美股雖漲但台股開盤無法延續，代表追價意願不足
 - 若櫃買轉弱，中小型股當沖風險升高
 - 若台指期快速翻黑，應降低出手次數
 
 判斷依據：
 {reason_text}
-
-盤前分數：{score}
 """
 
 
@@ -179,7 +136,6 @@ for i, entry in enumerate(feed.entries[:5], start=1):
     news_titles.append(entry.title)
     news_text += f"{i}. {entry.title}\n"
 
-
 night_market = get_taifex_night_market()
 
 market_items = [
@@ -191,7 +147,6 @@ market_items = [
     get_price("^TWOII", "櫃買指數"),
     get_price("^TWII", "台指期夜盤參考"),
 ]
-
 
 raw_market_text = f"""
 📰 重大新聞
@@ -207,38 +162,33 @@ raw_market_text = f"""
 {market_items[4]}
 {market_items[5]}
 {market_items[6]}
-"""
 
+🌙 台指夜盤
+{night_market}
+"""
 
 analysis_text = rule_analysis(market_items, news_titles)
 
-
 message = f"""
-🧠 網路盤前分析
+📢 台股AI操盤總指揮｜Telegram晨報
+
+🧠 盤前分析
 {analysis_text}
 
 {raw_market_text}
+
+⚠️ 本報告僅供參考，非投資建議。
 """
 
-
-url = "https://api.line.me/v2/bot/message/broadcast"
-
-headers = {
-    "Authorization": f"Bearer {LINE_TOKEN}",
-    "Content-Type": "application/json"
-}
+url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 
 payload = {
-    "messages": [
-        {
-            "type": "text",
-            "text": message
-        }
-    ]
+    "chat_id": TELEGRAM_CHAT_ID,
+    "text": message
 }
 
-res = requests.post(url, headers=headers, json=payload)
+res = requests.post(url, json=payload)
 
-print(res.status_code)
-print(res.text)
+print("Telegram status:", res.status_code)
+print("Telegram response:", res.text)
 print(message)
