@@ -11,213 +11,148 @@ WATCHLIST = {
     "加權指數": "^TWII",
     "OTC櫃買": "^TWOII",
     "台積電": "2330.TW",
-    "鴻海": "2317.TW",
-    "廣達": "2382.TW",
-    "緯創": "3231.TW",
-    "緯穎": "6669.TW",
-    "技嘉": "2376.TW",
-    "華碩": "2357.TW",
-    "奇鋐": "3017.TW",
-    "雙鴻": "3324.TW",
-    "台達電": "2308.TW",
-    "智邦": "2345.TW",
-    "南亞科": "2408.TW",
-    "華邦電": "2344.TW",
 }
 
 
-def get_data(name, symbol):
+def get_change(symbol, name):
     try:
         data = yf.Ticker(symbol)
-        hist = data.history(period="5d").dropna()
+        hist = data.history(period="2d").dropna()
 
         if len(hist) < 2:
             return {
                 "name": name,
-                "symbol": symbol,
-                "price": 0,
-                "change_pct": 0,
-                "volume_ratio": 0,
-                "status": "無資料"
+                "percent": 0,
+                "text": f"{name}: 無資料"
             }
 
-        today = hist.iloc[-1]
-        yesterday = hist.iloc[-2]
-
-        price = round(today["Close"], 2)
-        prev_close = yesterday["Close"]
-        change_pct = round((price - prev_close) / prev_close * 100, 2)
-
-        avg_volume = hist["Volume"].iloc[:-1].mean()
-        volume_ratio = round(today["Volume"] / avg_volume, 2) if avg_volume > 0 else 0
+        prev = hist["Close"].iloc[-2]
+        now = hist["Close"].iloc[-1]
+        pct = round((now - prev) / prev * 100, 2)
 
         return {
             "name": name,
-            "symbol": symbol,
-            "price": price,
-            "change_pct": change_pct,
-            "volume_ratio": volume_ratio,
-            "status": "OK"
+            "percent": pct,
+            "text": f"{name}: {pct}%"
         }
 
     except Exception as e:
         return {
             "name": name,
-            "symbol": symbol,
-            "price": 0,
-            "change_pct": 0,
-            "volume_ratio": 0,
-            "status": f"錯誤：{e}"
+            "percent": 0,
+            "text": f"{name}: 抓取失敗"
         }
 
 
-def classify_stock(item):
-    name = item["name"]
-    pct = item["change_pct"]
-    vol = item["volume_ratio"]
-
-    alerts = []
+def judge_market(taiex, otc, tsmc):
     score = 0
+    signals = []
 
-    if pct >= 3:
-        alerts.append(f"🔥 {name} 強攻 +{pct}%")
-        score += 3
-    elif pct >= 1.5:
-        alerts.append(f"🟢 {name} 轉強 +{pct}%")
-        score += 2
-    elif pct >= 0.5:
-        alerts.append(f"🟡 {name} 小漲 +{pct}%")
+    if taiex > 0:
         score += 1
-
-    if pct <= -3:
-        alerts.append(f"🚨 {name} 重挫 {pct}%")
-        score -= 3
-    elif pct <= -1.5:
-        alerts.append(f"⚠️ {name} 明顯轉弱 {pct}%")
-        score -= 2
-    elif pct <= -0.5:
-        alerts.append(f"🟠 {name} 小跌 {pct}%")
-        score -= 1
-
-    if vol >= 2 and pct > 0:
-        alerts.append(f"📈 {name} 放量上攻，量能 {vol} 倍")
-        score += 2
-
-    if vol >= 2 and pct < 0:
-        alerts.append(f"📉 {name} 放量下殺，量能 {vol} 倍")
-        score -= 2
-
-    if vol >= 3:
-        alerts.append(f"⚡ {name} 爆量，量能 {vol} 倍")
-
-    return alerts, score
-
-
-def market_review(results):
-    score = 0
-    strong = []
-    weak = []
-    explosive = []
-
-    for item in results:
-        alerts, s = classify_stock(item)
-        score += s
-
-        if item["change_pct"] >= 1.5:
-            strong.append(item["name"])
-
-        if item["change_pct"] <= -1.5:
-            weak.append(item["name"])
-
-        if item["volume_ratio"] >= 2:
-            explosive.append(item["name"])
-
-    if score >= 10:
-        view = "🟢 強多盤，資金風險偏好明顯升溫"
-        strategy = "可觀察主流族群續強，但禁止無腦追高。"
-    elif score >= 5:
-        view = "🟡 中性偏多，強勢股有輪動機會"
-        strategy = "可小部位觀察強勢族群，等回測不破再進。"
-    elif score >= -4:
-        view = "⚪ 震盪盤，多空尚未明確"
-        strategy = "以觀察為主，避免追價，等方向確認。"
-    elif score >= -9:
-        view = "🟠 中性偏弱，盤中風險升高"
-        strategy = "降低出手次數，避免追高與攤平。"
+        signals.append("加權偏多")
     else:
-        view = "🔴 空方風險盤，資金明顯退潮"
-        strategy = "以防守為主，嚴控部位，不搶反彈。"
+        score -= 1
+        signals.append("加權偏弱")
 
-    return score, view, strategy, strong, weak, explosive
+    if otc > 0:
+        score += 1
+        signals.append("OTC偏多")
+    else:
+        score -= 1
+        signals.append("OTC偏弱")
+
+    if tsmc > 0:
+        score += 1
+        signals.append("台積電偏多")
+    else:
+        score -= 1
+        signals.append("台積電偏弱")
+
+    if taiex > 0 and otc > 0 and tsmc > 0:
+        view = "🟢 三方同步偏多"
+        action = "可觀察多方機會，但仍需等量價確認。"
+    elif taiex < 0 and otc < 0 and tsmc < 0:
+        view = "🔴 三方同步偏弱"
+        action = "盤勢風險升高，降低出手次數。"
+    elif taiex > 0 and otc < 0:
+        view = "🟠 指數強、中小型股弱"
+        action = "避免追中小型股，留意開高走低。"
+    elif taiex < 0 and otc > 0:
+        view = "🟡 中小型股較強"
+        action = "可觀察題材股，但嚴控部位。"
+    else:
+        view = "⚪ 盤勢震盪"
+        action = "多空不明，先觀察。"
+
+    return score, signals, view, action
 
 
-results = [get_data(name, symbol) for name, symbol in WATCHLIST.items()]
+items = {name: get_change(symbol, name) for name, symbol in WATCHLIST.items()}
 
-all_alerts = []
-total_score = 0
+taiex = items["加權指數"]["percent"]
+otc = items["OTC櫃買"]["percent"]
+tsmc = items["台積電"]["percent"]
 
-for item in results:
-    alerts, score = classify_stock(item)
-    all_alerts.extend(alerts)
-    total_score += score
-
-market_score, market_view, strategy, strong, weak, explosive = market_review(results)
+score, signals, view, action = judge_market(taiex, otc, tsmc)
 
 now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-if all_alerts:
-    message = f"""
-📡 台股AI盤中警報 V3｜總指揮審查版
+message = f"""
+📡 台股AI盤中監控｜正確版
 
 時間：{now}
 
-一、總指揮結論
-{market_view}
+====================
+🎖️ 一、總指揮結論
+====================
 
-二、盤中分數
-{market_score}
+盤勢狀態：
+{view}
 
-三、今日策略
-{strategy}
+盤中分數：
+{score}
 
-四、強勢觀察
-{", ".join(strong) if strong else "目前無明顯強勢股"}
+操作建議：
+{action}
 
-五、弱勢警戒
-{", ".join(weak) if weak else "目前無明顯弱勢股"}
+====================
+📈 二、技術官｜三核心觀察
+====================
 
-六、爆量名單
-{", ".join(explosive) if explosive else "目前無明顯爆量股"}
+{items["加權指數"]["text"]}
+{items["OTC櫃買"]["text"]}
+{items["台積電"]["text"]}
 
-七、盤中異動明細
-{chr(10).join(all_alerts)}
+====================
+🛡️ 三、風控官提醒
+====================
 
-八、紀律官提醒
 - 不追高
 - 不攤平
 - 不摸頭
-- 等量價確認
-- OTC轉弱時，中小型股風險升高
-- 台積電轉弱時，大盤容易受壓
-- 爆量長黑視為高風險訊號
+- 不抄底
+- 等加權、OTC、台積電同步確認
+- 若OTC轉弱，中小型股當沖風險升高
+- 若台積電轉弱，大盤容易受壓
+
+====================
+⏰ 四、盤中節奏
+====================
+
+09:00～09:15：
+觀察開盤氣勢，不急著進場
+
+09:15～09:30：
+確認量價是否延續
+
+10:30後：
+若主流族群不明，降低出手
+
+13:00後：
+避免尾盤追價
 
 ⚠️ 本訊息僅供觀察，不是投資建議。
-"""
-else:
-    message = f"""
-📡 台股AI盤中監控 V3
-
-時間：{now}
-
-目前無重大異動。
-
-盤勢狀態：
-⚪ 觀察盤
-
-紀律提醒：
-- 不急著出手
-- 等主流族群明確
-- 等加權、OTC、台積電同步確認
 """
 
 url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
