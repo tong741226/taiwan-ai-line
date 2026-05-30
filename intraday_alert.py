@@ -6,6 +6,23 @@ from datetime import datetime
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
+# ===== 台股交易時間保護機制 =====
+
+now_check = datetime.now()
+
+# 週六週日不執行
+if now_check.weekday() >= 5:
+    print("今天是假日，不執行盤中監控。")
+    exit()
+
+current_time = now_check.time()
+
+# 非盤中時間不執行
+if not (time(9, 0) <= current_time <= time(13, 30)):
+    print("非台股盤中時間，不執行盤中監控。")
+    exit()
+
+# ============================
 
 WATCHLIST = {
     "加權指數": "^TWII",
